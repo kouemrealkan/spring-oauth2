@@ -24,6 +24,14 @@ public class UserAuthority extends IdEntity implements GrantedAuthority {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public UserAuthority(AuthorityType type) {
         this.code = type.getName();
     }

@@ -32,7 +32,7 @@ public class User extends IdEntity implements UserDetails {
     private String email;
     private String password;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Set<UserAuthority> authorities;
 
