@@ -15,5 +15,25 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
 
+  security:
+      oauth2:
+        client:
+          registration:
+            google-idp:
+              provider: google
+              client-secret: ${GOOGLE_CLIENT_SECRET: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}
+              client-id: ${GOOGLE_CLIENT_ID:247740690254-3ajg2rd6jdb9fn9cgbd76t4na7354gj3.apps.googleusercontent.com}
+              scope: openid, https://www.googleapis.com/auth/userinfo.profile, https://www.googleapis.com/auth/userinfo.email
+              client-name: oauth2-client-web
+          provider:
+            google:
+              user-name-attribute: email
+
 server:
   port: 8080
+logging:
+  level:
+    org:
+      springframework:
+        nodeValue: TRACE
+        oauth2: TRACE

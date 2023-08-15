@@ -21,11 +21,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Table(name = "user")
 public class User extends IdEntity implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-    @Column(name = "id", length = 50)
-    protected String identifier;
     private String name;
     private String lastName;
     private String username;

@@ -1,12 +1,14 @@
 package com.alkan.securitydemov1.security;
 
+import com.alkan.securitydemov1.data.repository.SocialUserRepository;
 import com.alkan.securitydemov1.data.service.ClientService;
+import com.alkan.securitydemov1.federated.FederatedIdentityConfigurer;
+import com.alkan.securitydemov1.federated.UserRepositoryOAuth2UserHandler;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,23 +19,20 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -48,28 +47,46 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final SocialUserRepository socialUserRepository;
+
     private final ClientService clientService;
 
     @Bean
     @Order(1)
     public SecurityFilterChain webFilterChainForOauth(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.cors(Customizer.withDefaults());
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(httpSecurity);
         httpSecurity.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
-        httpSecurity.exceptionHandling(e -> e.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
-                .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
-        ;
+        httpSecurity.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
+        httpSecurity.apply(new FederatedIdentityConfigurer());
         return httpSecurity.build();
     }
 
     @Bean
     @Order(2)
     public SecurityFilterChain appSecurity(HttpSecurity security) throws Exception {
-        security.csrf().disable();
+        security.cors(Customizer.withDefaults());
+        FederatedIdentityConfigurer federatedIdentityConfigurer = new FederatedIdentityConfigurer()
+                .oauth2UserHandler(new UserRepositoryOAuth2UserHandler(socialUserRepository));
+        security
+                .authorizeHttpRequests(authorize ->
+                        authorize
+                                .requestMatchers("/auth/**", "/client/**", "/login").permitAll()
+                                .anyRequest().authenticated()
+                )
+                .formLogin(Customizer.withDefaults())
+                .apply(federatedIdentityConfigurer);
+        security.logout().logoutSuccessUrl("http://127.0.0.1:4200/logout");
+        security.csrf().ignoringRequestMatchers("/auth/**", "/client/**");
+        return security.build();
+        /*  security.csrf().disable();
         security.authorizeHttpRequests(
                 request ->
                         request.requestMatchers("/clients/**").permitAll()
                                 .anyRequest().authenticated()).formLogin(Customizer.withDefaults());
         return security.build();
+
+       */
     }
 
    /* @Bean
@@ -100,7 +117,7 @@ public class SecurityConfig {
         var registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("public-client-app")
                 .clientSecret(passwordEncoder().encode("secret"))
-                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.OĞP)
                 .redirectUri("https://oauthdebugger.com/debug")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantTypes(grantType -> {
@@ -129,6 +146,26 @@ public class SecurityConfig {
                 context.getClaims().claim("authorities", authorities).claim("username", principal.getName());
             }
         };
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+
+    @Bean
+    public OAuth2AuthorizationService authorizationService() {
+        return new InMemoryOAuth2AuthorizationService();
+    }
+
+    @Bean
+    public OAuth2AuthorizationConsentService authorizationConsentService() {
+        return new InMemoryOAuth2AuthorizationConsentService();
     }
 
     @Bean
