@@ -43,7 +43,10 @@ public class Client extends IdEntity {
                 .redirectUris(ru -> ru.addAll(client.getRedirectUris()))
                 .scopes(sc -> sc.addAll(client.getScopes()))
                 .clientSettings(ClientSettings
-                        .builder().requireProofKey(client.isRequireProofKey()).build());
+                        .builder()
+                        .requireProofKey(client.isRequireProofKey())
+                        .requireAuthorizationConsent(true)
+                        .build());
         return builder.build();
     }
 
