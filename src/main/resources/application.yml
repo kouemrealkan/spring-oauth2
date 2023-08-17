@@ -1,20 +1,10 @@
 spring:
+  config:
+    import: secrets.yml
+
   application:
     name: uaa-service
 
-  security:
-      oauth2:
-        client:
-          registration:
-            google-idp:
-              provider: google
-              client-secret: ${GOOGLE_CLIENT_SECRET:{your_secret_key}}
-              client-id: ${GOOGLE_CLIENT_ID:{your_client_id}}
-              scope: openid, https://www.googleapis.com/auth/userinfo.profile, https://www.googleapis.com/auth/userinfo.email
-              client-name: oauth2-client-web
-          provider:
-            google:
-              user-name-attribute: email
 
 server:
   port: 8080
