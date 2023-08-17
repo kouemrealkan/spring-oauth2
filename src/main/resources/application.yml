@@ -1,19 +1,6 @@
 spring:
   application:
     name: uaa-service
-  datasource:
-    url: jdbc:mysql://localhost:3306/spring_security_demo_V1
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: emreSskla2541
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
 
   security:
       oauth2:
@@ -37,3 +24,20 @@ logging:
       springframework:
         nodeValue: TRACE
         oauth2: TRACE
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
