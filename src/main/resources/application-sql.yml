@@ -7,7 +7,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/spring_security_demo_V1
     username: root
-    password: emreSskla2541
+    password: -
   jpa:
     hibernate:
       ddl-auto: update
