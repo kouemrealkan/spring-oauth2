@@ -22,7 +22,7 @@ public class BeanConfig {
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.addAllowedOrigin("http://127.0.0.1:4200");
+        corsConfiguration.addAllowedOrigin("http://localhost:4200");
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }

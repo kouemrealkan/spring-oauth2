@@ -1,6 +1,6 @@
 spring:
   config:
-    import: secrets.yml
+    import: application-sql.yml
 
   application:
     name: uaa-service

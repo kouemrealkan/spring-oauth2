@@ -3,11 +3,23 @@ spring:
     activate:
       on-profile: test
   datasource:
-    dbname: spring_security_demo_v1
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/spring_security_demo_V1
     username: root
-    password: -
+    password: emreSskla2541
+  security:
+    oauth2:
+      client:
+        registration:
+          google-idp:
+            provider: google
+            client-secret: ${GOOGLE_CLIENT_SECRET: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}
+            client-id: ${GOOGLE_CLIENT_ID:247740690254-3ajg2rd6jdb9fn9cgbd76t4na7354gj3.apps.googleusercontent.com}
+            scope: openid, https://www.googleapis.com/auth/userinfo.profile, https://www.googleapis.com/auth/userinfo.email
+            client-name: oauth2-client-web
+        provider:
+          google:
+            user-name-attribute: email
   jpa:
     hibernate:
       ddl-auto: update
